@@ -13,20 +13,19 @@ def inv(pix):
 
 
 def grayscale(pix):
-    return pix@[0.299, 0.587, 0.114]
-    # return np.dot(pix[..., :3], [0.299, 0.587, 0.114])
+    return (pix @ [0.299, 0.587, 0.114]).astype(np.uint8)
 
 
 def red_channel(pix):
-    return pix@[1.0, 0, 0]
+    return pix @ [1.0, 0, 0]
 
 
 def green_channel(pix):
-    return pix@[0, 1.0, 0]
+    return pix @ [0, 1.0, 0]
 
 
 def blue_channel(pix):
-    return pix@[0, 0, 1.0]
+    return pix @ [0, 0, 1.0]
 
 
 def downscale2(pix):
@@ -43,31 +42,31 @@ def lighter(pix):
     npix *= 2
     return npix
 
+
 def del_channels(pix, channels):
     npix = np.array(pix)
     for i in channels:
-        npix[..., i:i+1] = 0
+        npix[..., i:i + 1] = 0
     return npix
+
 
 def sharp(pix):
     gpix = grayscale(pix)
     effect = np.array([-1, -1, -1, -1, 8, -1, -1, -1, -1])
     pmask = np.array(gpix)
 
-    for i in range(1,len(gpix)-1):
-        for j in range(1,len(gpix[i])-1):
-            vector = gpix[i-1:i+2, j-1:j+2].flatten()
-            pmask[i,j] = np.sum(vector*effect)
+    for i in range(1, len(gpix) - 1):
+        for j in range(1, len(gpix[i]) - 1):
+            vector = gpix[i - 1:i + 2, j - 1:j + 2].flatten()
+            pmask[i, j] = np.sum(vector * effect)
 
     # pmask[pmask < 0] = 0
     # pmask[pmask > 255] = 255
 
-    npix = np.dstack( (pix[..., 0] + pmask, pix[..., 1] + pmask, pix[..., 2] + pmask) )
+    npix = np.dstack((pix[..., 0] + pmask, pix[..., 1] + pmask, pix[..., 2] + pmask))
     npix[npix < 0] = 0
     npix[npix > 255] = 255
     return npix.astype(np.uint8)
-
-
 
 
 def main():
@@ -92,10 +91,7 @@ def main():
     # Image.fromarray(lighter(pix)).show()
 
 
-    # Image.fromarray(del_channels(pix, [2])).show()
-    Image.fromarray(sharp(pix)).show()
+    # Image.fromarray(del_channels(pix, [0])).show()
+    # Image.fromarray(sharp(pix)).show()
     # Image.fromarray(pix).show()
     # print((pix[1,1,]//2))
-
-
-main()
