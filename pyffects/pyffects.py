@@ -1,6 +1,5 @@
 from PIL import Image, ImageQt
 from PyQt5 import QtWidgets, uic, QtGui
-from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import QFileDialog
 
 import piceffects as pic
@@ -11,9 +10,7 @@ class ImageLable(QtWidgets.QLabel):
         super().__init__()
         self.image = ImageQt.ImageQt(Image.open(image))
         self.origin_pixmap = QtGui.QPixmap.fromImage(self.image)
-        self.pixmap = self.origin_pixmap
-        self.setPixmap(self.pixmap)
-
+        self.paint()
 
     def paint(self, pixmap = None):
         if not pixmap:
@@ -21,6 +18,7 @@ class ImageLable(QtWidgets.QLabel):
         self.pixmap = pixmap
         self.setPixmap(self.pixmap)
         self.show()
+
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -47,19 +45,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def open_file(self):
-        path, _ = QFileDialog.getOpenFileName(self, 'Open file',  '~', "Image files (*.jpg *.png)")
-        self.img_label.origin_pixmap = QtGui.QPixmap(path)
+        filename, _ = QFileDialog.getOpenFileName(self, 'Open file',  '~', "Image files (*.jpg *.png)")
+        self.img_label.origin_pixmap = QtGui.QPixmap(filename)
         self.img_label.paint()
-        pass
 
     def save_file(self):
         path, _ = QFileDialog.getSaveFileName(self, 'Save file', 'new_image.jpg', "Image file (*.jpg)")
         result_pic = ImageQt.fromqpixmap(self.img_label.pixmap)
         result_pic.save(path)
-        pass
 
     def load_buttons(self):
-        # Buttons
         self.gray_button = self.findChild(QtWidgets.QPushButton, 'restore_btn')
         self.gray_button.clicked.connect(self.restore_img)
 
@@ -87,8 +82,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lighten_button = self.findChild(QtWidgets.QPushButton, 'lighten_btn')
         self.lighten_button.clicked.connect(lambda: self.apply_effect(pic.lighten))
 
+        self.del_red_button = self.findChild(QtWidgets.QPushButton, 'del_red_btn')
+        self.del_red_button.clicked.connect(lambda: self.del_channel([0]))
+
+        self.del_green_button = self.findChild(QtWidgets.QPushButton, 'del_green_btn')
+        self.del_green_button.clicked.connect(lambda: self.del_channel([1]))
+
+        self.del_blue_button = self.findChild(QtWidgets.QPushButton, 'del_blue_btn')
+        self.del_blue_button.clicked.connect(lambda: self.del_channel([2]))
+
         self.sharp_button = self.findChild(QtWidgets.QPushButton, 'sharp_btn')
         self.sharp_button.clicked.connect(lambda: self.apply_effect(pic.sharp))
+
 
 
     def apply_effect(self, func):
@@ -96,6 +101,14 @@ class MainWindow(QtWidgets.QMainWindow):
         image = ImageQt.fromqpixmap(pixmap)
         data = pic.to_arr(image)
         modifided_image = pic.to_img(func(data))
+        pixmap = ImageQt.toqpixmap(modifided_image)
+        self.img_label.paint(pixmap)
+
+    def del_channel(self, arr):
+        pixmap = self.img_label.pixmap
+        image = ImageQt.fromqpixmap(pixmap)
+        data = pic.to_arr(image)
+        modifided_image = pic.to_img(pic.del_channels(data, arr))
         pixmap = ImageQt.toqpixmap(modifided_image)
         self.img_label.paint(pixmap)
 
@@ -107,16 +120,6 @@ def main():
     app = QtWidgets.QApplication([])
 
     window = MainWindow()
-
-
-    # img_label = QtWidgets.QLabel()
-    # image = ImageQt.ImageQt(Image.open('pics/lena.png'))
-    # pixmap = QtGui.QPixmap.fromImage(image)
-    # img_label.setPixmap(pixmap)
-
     window.show()
-     # pic.to_arr()
-    # window.apply_effect(pic.lighter)
-    # window.apply_effect(pic.grayscale)
 
     return app.exec()
