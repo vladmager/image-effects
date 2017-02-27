@@ -1,4 +1,4 @@
-from pyffects.piceffects import main
+from .piceffects import main
 
 if __name__ == "__main__":
     main()

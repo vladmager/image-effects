@@ -2,41 +2,49 @@ import numpy as np
 from PIL import Image
 
 
-def to_arr(name='pics/kvetina.jpg'):
-    pic = Image.open(name)
-    pix = np.array(pic)
-    return pix
+def to_arr(pic):
+    return np.array(pic)
+
+
+def to_img(pix):
+    return Image.fromarray(pix)
 
 
 def inv(pix):
     return 255 - pix
 
 
-def grayscale(pix):
+def grayscale_uint8(pix):
     return (pix @ [0.299, 0.587, 0.114]).astype(np.uint8)
+
+def grayscale(pix):
+    return (pix @ [0.299, 0.587, 0.114])
 
 
 def red_channel(pix):
-    return pix @ [1.0, 0, 0]
+    npix = pix @ [1.0, 0, 0]
+    return npix.astype(np.uint8)
 
 
 def green_channel(pix):
-    return pix @ [0, 1.0, 0]
+    npix = pix @ [0, 1.0, 0]
+    return npix.astype(np.uint8)
 
 
 def blue_channel(pix):
-    return pix @ [0, 0, 1.0]
+    npix = pix @ [0, 0, 1.0]
+    return npix.astype(np.uint8)
 
 
-def downscale2(pix):
+def downscale(pix):
     return pix[::2, ::2]
 
 
-def darker(pix):
+def darken(pix):
     return pix // 2
 
 
-def lighter(pix):
+def lighten(pix):
     npix = np.array(pix)
     npix[npix > 255 // 2] = 255 // 2
     npix *= 2
@@ -69,8 +77,10 @@ def sharp(pix):
     return npix.astype(np.uint8)
 
 
+
 def main():
     pix = to_arr()
+    pic = Image.open('pics/lena.png')
     # print(grayscale(pix))
 
     # Inverse colors
@@ -85,10 +95,10 @@ def main():
     # Image.fromarray(blue_channel(pix)).show()
 
     # Down scale 2x
-    # Image.fromarray(downscale2(pix)).show()
+    # Image.fromarray(downscale(pix)).show()
     # print(pix[::3, ::3])
-    # print(darker(pix))
-    # Image.fromarray(lighter(pix)).show()
+    # print(darken(pix))
+    # Image.fromarray(lighten(pix)).show()
 
 
     # Image.fromarray(del_channels(pix, [0])).show()
