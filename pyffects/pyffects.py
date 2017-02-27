@@ -1,7 +1,7 @@
 from PIL import Image, ImageQt
 from PyQt5 import QtWidgets, uic, QtGui
 from PyQt5.QtGui import QImage
-
+from PyQt5.QtWidgets import QFileDialog
 
 import piceffects as pic
 
@@ -10,28 +10,17 @@ class ImageLable(QtWidgets.QLabel):
     def __init__(self, image):
         super().__init__()
         self.image = ImageQt.ImageQt(Image.open(image))
-        # self.setScaledContents(True)
-        self.pixmap = QtGui.QPixmap.fromImage(self.image)
+        self.origin_pixmap = QtGui.QPixmap.fromImage(self.image)
+        self.pixmap = self.origin_pixmap
         self.setPixmap(self.pixmap)
 
 
-    def paint(self, pixmap):
-        self.setPixmap(pixmap)
+    def paint(self, pixmap = None):
+        if not pixmap:
+            pixmap = self.origin_pixmap
+        self.pixmap = pixmap
+        self.setPixmap(self.pixmap)
         self.show()
-
-def buttonClicked():
-    print('bla')
-
-def apply_modifier(func, image_widget):
-    # pixmap -> array
-    pixmap = image_widget.pixmap
-    image = ImageQt.fromqpixmap(pixmap)
-    data = np.array(image)
-    modifided_image = Image.fromarray(func(data))
-    # array -> pixmap
-    pixmap = ImageQt.toqpixmap(modifided_image)
-    image_widget.pixmap = pixmap
-    image_widget.update()
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -42,12 +31,35 @@ class MainWindow(QtWidgets.QMainWindow):
         with open('uis/main.ui') as f:
             uic.loadUi(f, self)
 
-        self.label = ImageLable('pics/lena.png')
+        self.img_label = ImageLable('pics/lena.png')
 
         self.scrollArea = self.findChild(QtWidgets.QScrollArea, 'scrollArea')
         self.scrollArea.setBackgroundRole(QtGui.QPalette.Dark)
-        self.scrollArea.setWidget(self.label)
+        self.scrollArea.setWidget(self.img_label)
 
+        self.action_open = self.findChild(QtWidgets.QAction, 'actionOpen_File')
+        self.action_open.triggered.connect(self.open_file)
+
+        self.action_save = self.findChild(QtWidgets.QAction, 'actionSave_File')
+        self.action_save.triggered.connect(self.save_file)
+
+        self.load_buttons()
+
+
+    def open_file(self):
+        path, _ = QFileDialog.getOpenFileName(self, 'Open file',  '~', "Image files (*.jpg *.png)")
+        self.img_label.origin_pixmap = QtGui.QPixmap(path)
+        self.img_label.paint()
+        pass
+
+    def save_file(self):
+        path, _ = QFileDialog.getSaveFileName(self, 'Save file', 'new_image.jpg', "Image file (*.jpg)")
+        result_pic = ImageQt.fromqpixmap(self.img_label.pixmap)
+        result_pic.save(path)
+        pass
+
+    def load_buttons(self):
+        # Buttons
         self.gray_button = self.findChild(QtWidgets.QPushButton, 'restore_btn')
         self.gray_button.clicked.connect(self.restore_img)
 
@@ -79,19 +91,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sharp_button.clicked.connect(lambda: self.apply_effect(pic.sharp))
 
 
-
-
-
     def apply_effect(self, func):
-        pixmap = self.label.pixmap
+        pixmap = self.img_label.pixmap
         image = ImageQt.fromqpixmap(pixmap)
         data = pic.to_arr(image)
         modifided_image = pic.to_img(func(data))
         pixmap = ImageQt.toqpixmap(modifided_image)
-        self.label.paint(pixmap)
+        self.img_label.paint(pixmap)
 
     def restore_img(self):
-        self.label.paint(self.label.pixmap)
+        self.img_label.paint(self.img_label.origin_pixmap)
 
 
 def main():
@@ -100,10 +109,10 @@ def main():
     window = MainWindow()
 
 
-    # label = QtWidgets.QLabel()
+    # img_label = QtWidgets.QLabel()
     # image = ImageQt.ImageQt(Image.open('pics/lena.png'))
     # pixmap = QtGui.QPixmap.fromImage(image)
-    # label.setPixmap(pixmap)
+    # img_label.setPixmap(pixmap)
 
     window.show()
      # pic.to_arr()
